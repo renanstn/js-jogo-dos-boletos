@@ -19,3 +19,7 @@
     text-align          : center;
     display             : none;
 }
+
+#stage {
+    border-style: solid;
+}

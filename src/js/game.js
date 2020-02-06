@@ -1,31 +1,38 @@
-
-const stage     = document.getElementById("stage");
-const ctx       = stage.getContext("2d");
+const canvas    = document.getElementById("stage");
+const ctx       = canvas.getContext("2d");
 
 // Sprites
 let background  = new Image();
 let money       = new Image();
 let money_pot   = new Image();
-let hand_a      = new Image();
-let hand_b      = new Image();
+let hand_up     = new Image();
+let hand_down   = new Image();
 let boleto      = new Image();
+let dedo        = new Image();
 
 background.src  = "sprites/background.png";
-money.src       = "sprites/money.png";
-money_pot.src   = "sprites/money_pot.png";
-hand_a.src      = "sprites/hand_a.png";
-hand_b.src      = "sprites/hand_b.png";
+money.src       = "sprites/dinheiro.png";
+money_pot.src   = "sprites/dinheiro_bolo.png";
+hand_up.src     = "sprites/mao_superior.png";
+hand_down.src   = "sprites/mao_inferior.png";
 boleto.src      = "sprites/boleto.png";
+dedo.src        = "sprites/dedo.png";
 
 // Game variables
-const speed     = 2.0;
-let score       = 0;
-let game_over   = false;
-let hand_x      = 150;
-let hand_y      = 237;
-let hand_sup_x  = 150;
-let hand_sup_y  = 237;
-let moneys      = [];
+const speed     = 2.0;              // Velocidade que o dinheiro se move
+const width     = canvas.width;     // Largura da tela
+const height    = canvas.height;    // Altura da tela
+const limit_l   = 20;               // Limite esquerdo da tela para limitar o movimento
+const limit_r   = 340;              // Limite direito da tela para limitar o movimento
+const cooldown  = 300;              // Tempo (milisegundos) entre jogar uma nota e outra
+let score       = 0;                // Placar
+let game_over   = false;            // Controle de game over
+let hand_x      = 20;               // Posição X da mão
+let hand_y      = height - 90;      // Posição Y da mão
+let hand_sup_y  = hand_y;           // Posição Y da mão superior
+let moneys      = [];               // Array de dinheiros jogados
+let can_throw   = true;             // Variável que controla o cooldown do ato de jogar dinheiro
+
 
 // Detectar inputs
 document.addEventListener("keydown", function(e) {
@@ -43,16 +50,35 @@ document.addEventListener("keydown", function(e) {
 });
 
 function move_left() {
-    hand_x -= 64;
+    if (hand_x > limit_l) {
+        hand_x -= 64;
+    }
 }
 
 function move_right() {
-    hand_x += 64;
+    if (hand_x < limit_r) {
+        hand_x += 64;
+    }
 }
 
 function throw_money() {
+    if (can_throw) {
+        moneys.push({"x": hand_x + 20, "y": hand_y});
+        anima_mao_up();
+        setTimeout(() => {
+            anima_mao_down();
+        }, cooldown);
+    }
+}
+
+function anima_mao_up() {
+    can_throw = false;
     hand_sup_y -= 30;
-    moneys.push({"x": hand_x, "y": hand_y});
+}
+
+function anima_mao_down() {
+    can_throw = true;
+    hand_sup_y = hand_y;
 }
 
 function gameOver() {
@@ -61,19 +87,18 @@ function gameOver() {
     document.getElementById("game-over").style = "display : inline";
 }
 
-
 function draw() {
+    // Limpar o canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     // Desenhar fundo
-    ctx.drawImage(background, 0, 0);
+    // ctx.drawImage(background, 0, 0);
 
-    // Desenhar mão
-    ctx.drawImage(hand_a, hand_x, hand_y);
+    // Desenhar mão inferior
+    ctx.drawImage(hand_down, hand_x, hand_y);
 
-    // Desenhar pot de grana
-    ctx.drawImage(money_pot, hand_x + 10, hand_y - 10);
-
-    // Desenhar a outra mão
-    ctx.drawImage(hand_b, hand_sup_x, hand_sup_y);
+    // Desenhar bolo de grana
+    ctx.drawImage(money_pot, hand_x + 20, hand_y + 8);
 
     // Desenhar os dinheiros jogados
     for (let i = 0; i < moneys.length; i++) {
@@ -81,6 +106,12 @@ function draw() {
         ctx.drawImage(money, t_money.x, t_money.y);
         t_money.y -= 5
     }
+
+    // Desenhar o dedo
+    ctx.drawImage(dedo, hand_x + 51, hand_y + 30);
+
+    // Desenhar a mão superior
+    ctx.drawImage(hand_up, hand_x - 20, hand_sup_y);
 
     requestAnimationFrame(draw);
 }
