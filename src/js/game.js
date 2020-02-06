@@ -21,12 +21,9 @@ dedo.src        = "sprites/dedo.png";
 // Audios
 let score_snd   = new Audio();
 let damage_snd  = new Audio();
-let bg_music    = new Audio();
 
 score_snd.src   = "sounds/coin.wav";
 damage_snd.src  = "sounds/hurt.wav";
-bg_music.src    = "sounds/song.wav";
-//bg_music.loop   = true;
 
 // Game variables
 const money_speed   = 3;
@@ -121,7 +118,6 @@ function increase_level() {
 }
 
 function spawn_enemies() {
-    bg_music.play();
     setInterval(() => {
         create_enemy();
     }, enemy_cooldown);
