@@ -19,19 +19,23 @@ boleto.src      = "sprites/boleto.png";
 dedo.src        = "sprites/dedo.png";
 
 // Game variables
-const speed     = 2.0;              // Velocidade que o dinheiro se move
-const width     = canvas.width;     // Largura da tela
-const height    = canvas.height;    // Altura da tela
-const limit_l   = 20;               // Limite esquerdo da tela para limitar o movimento
-const limit_r   = 340;              // Limite direito da tela para limitar o movimento
-const cooldown  = 300;              // Tempo (milisegundos) entre jogar uma nota e outra
-let score       = 0;                // Placar
-let game_over   = false;            // Controle de game over
-let hand_x      = 20;               // Posição X da mão
-let hand_y      = height - 90;      // Posição Y da mão
-let hand_sup_y  = hand_y;           // Posição Y da mão superior
-let moneys      = [];               // Array de dinheiros jogados
-let can_throw   = true;             // Variável que controla o cooldown do ato de jogar dinheiro
+const money_speed   = 5;
+const left_limit    = 20;
+const right_limit   = 340;
+const fire_cooldown = 300;
+const enemy_spawn_x = [20, 84, 148, 212, 276, 340];
+const enemy_spawn_y = -64;
+
+let score           = 0;
+let is_game_over    = false;
+let player_x        = 20;
+let player_y        = canvas.height - 90;
+let hand_sup_y      = player_y;
+let moneys          = [];
+let boletos         = [];
+let can_fire        = true;
+let enemy_cooldown  = 2000;
+let enemy_speed     = 1;
 
 
 // Detectar inputs
@@ -50,41 +54,52 @@ document.addEventListener("keydown", function(e) {
 });
 
 function move_left() {
-    if (hand_x > limit_l) {
-        hand_x -= 64;
+    if (player_x > left_limit) {
+        player_x -= 64;
     }
 }
 
 function move_right() {
-    if (hand_x < limit_r) {
-        hand_x += 64;
+    if (player_x < right_limit) {
+        player_x += 64;
     }
 }
 
 function throw_money() {
-    if (can_throw) {
-        moneys.push({"x": hand_x + 20, "y": hand_y});
-        anima_mao_up();
+    if (can_fire) {
+        moneys.push({"x": player_x + 20, "y": player_y});
+        animate_hand_up();
         setTimeout(() => {
-            anima_mao_down();
-        }, cooldown);
+            animate_hand_down();
+        }, fire_cooldown);
     }
 }
 
-function anima_mao_up() {
-    can_throw = false;
+function animate_hand_up() {
+    can_fire = false;
     hand_sup_y -= 30;
 }
 
-function anima_mao_down() {
-    can_throw = true;
-    hand_sup_y = hand_y;
+function animate_hand_down() {
+    can_fire = true;
+    hand_sup_y = player_y;
 }
 
-function gameOver() {
-    game_over = true;
+function game_over() {
+    is_game_over = true;
     document.getElementById("pontuacao").innerText = score;
     document.getElementById("game-over").style = "display : inline";
+}
+
+function spawn_enemies() {
+    setInterval(() => {
+        create_enemy();
+    }, enemy_cooldown);
+}
+
+function create_enemy() {
+    const position = enemy_spawn_x[Math.floor(Math.random() * enemy_spawn_x.length)];
+    boletos.push({"x": position, "y": enemy_spawn_y});
 }
 
 function draw() {
@@ -95,27 +110,34 @@ function draw() {
     // ctx.drawImage(background, 0, 0);
 
     // Desenhar mão inferior
-    ctx.drawImage(hand_down, hand_x, hand_y);
+    ctx.drawImage(hand_down, player_x, player_y);
 
     // Desenhar bolo de grana
-    ctx.drawImage(money_pot, hand_x + 20, hand_y + 8);
+    ctx.drawImage(money_pot, player_x + 20, player_y + 8);
 
     // Desenhar os dinheiros jogados
     for (let i = 0; i < moneys.length; i++) {
         const t_money = moneys[i];
         ctx.drawImage(money, t_money.x, t_money.y);
-        t_money.y -= 5
+        t_money.y -= money_speed
     }
 
     // Desenhar o dedo
-    ctx.drawImage(dedo, hand_x + 51, hand_y + 30);
+    ctx.drawImage(dedo, player_x + 51, player_y + 30);
 
     // Desenhar a mão superior
-    ctx.drawImage(hand_up, hand_x - 20, hand_sup_y);
+    ctx.drawImage(hand_up, player_x - 20, hand_sup_y);
+
+    for (let i = 0; i < boletos.length; i++) {
+        const t_boleto = boletos[i];
+        ctx.drawImage(boleto, t_boleto.x, t_boleto.y);
+        t_boleto.y += enemy_speed;
+    }
 
     requestAnimationFrame(draw);
 }
 
 window.onload = function() {
     draw();
+    spawn_enemies();
 }
