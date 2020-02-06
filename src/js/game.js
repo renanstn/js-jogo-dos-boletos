@@ -18,6 +18,13 @@ hand_down.src   = "sprites/mao_inferior.png";
 boleto.src      = "sprites/boleto.png";
 dedo.src        = "sprites/dedo.png";
 
+// Audios
+let score_snd   = new Audio();
+let damage_snd  = new Audio();
+
+score_snd.src   = "sounds/coin.wav";
+damage_snd      = "sound/hurt.wav";
+
 // Game variables
 const money_speed   = 3;
 const left_limit    = 20;
@@ -95,11 +102,13 @@ function game_over() {
 
 function hit() {
     lives -= 1;
+    damage_snd.play();
     document.getElementById("vidas").innerText = lives;
 }
 
 function increase_score() {
     score += 1;
+    score_snd.play();
     document.getElementById("score").innerText = score;
 }
 
