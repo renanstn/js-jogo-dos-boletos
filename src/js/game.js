@@ -137,7 +137,7 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Desenhar fundo
-    // ctx.drawImage(background, 0, 0);
+    ctx.drawImage(background, 0, 0);
 
     // Desenhar mão inferior
     ctx.drawImage(hand_down, player_x, player_y);
