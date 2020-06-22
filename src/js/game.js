@@ -26,12 +26,14 @@ score_snd.src   = "sounds/coin.wav";
 damage_snd.src  = "sounds/hurt.wav";
 
 // Game variables
-const money_speed   = 3;
-const left_limit    = 20;
-const right_limit   = 340;
-const fire_cooldown = 300;
-const enemy_spawn_x = [20, 84, 148, 212, 276, 340];
-const enemy_spawn_y = -64;
+const money_speed               = 3;
+const left_limit                = 20;
+const right_limit               = 340;
+const fire_cooldown             = 300;
+const enemy_spawn_x             = [20, 84, 148, 212, 276, 340];
+const enemy_spawn_y             = -64;
+const initial_enemy_cooldown    = 2000;
+const initial_enemy_speed       = 1;
 
 let score           = 0;
 let level           = 0;
@@ -43,8 +45,8 @@ let hand_sup_y      = player_y;
 let moneys          = [];
 let boletos         = [];
 let can_fire        = true;
-let enemy_cooldown  = 2000;
-let enemy_speed     = 1;
+let enemy_cooldown  = initial_enemy_cooldown;
+let enemy_speed     = initial_enemy_speed;
 
 
 // Detectar inputs
@@ -61,6 +63,10 @@ document.addEventListener("keydown", function(e) {
         reset_game();
     }
 });
+
+document.getElementById("play-again").addEventListener("click", function() {
+    replay();
+})
 
 function move_left() {
     if (player_x > left_limit) {
@@ -95,15 +101,34 @@ function animate_hand_down() {
 }
 
 function game_over() {
+    console.log("called game over");
     is_game_over = true;
     document.getElementById("pontuacao").innerText = score;
     document.getElementById("game-over").style = "display : inline";
+    clearInterval();
+}
+
+function replay() {
+    lives           = 3;
+    enemy_cooldown  = initial_enemy_cooldown;
+    enemy_speed     = initial_enemy_speed;
+    score           = 0;
+    level           = 0;
+    moneys          = [];
+    boletos         = [];
+    is_game_over    = false;
+    document.getElementById("game-over").style = "display : none";
+    draw();
+    spawn_enemies();
 }
 
 function hit() {
     lives -= 1;
     damage_snd.play();
     document.getElementById("vidas").innerText = lives;
+    if (lives <= 0) {
+        game_over();
+    }
 }
 
 function increase_score() {
@@ -128,16 +153,16 @@ function create_enemy() {
     boletos.push({"x": position, "y": enemy_spawn_y});
 }
 
-function play_again() {
-
-}
-
 function draw() {
     // Limpar o canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Desenhar fundo
     ctx.drawImage(background, 0, 0);
+
+    if (is_game_over) {
+        return;
+    }
 
     // Desenhar mão inferior
     ctx.drawImage(hand_down, player_x, player_y);
@@ -167,17 +192,19 @@ function draw() {
         }
     }
 
-    // Desenhar o dedo
+    // Desenhar o dedão da mão inferior
     ctx.drawImage(dedo, player_x + 51, player_y + 30);
 
     // Desenhar a mão superior
     ctx.drawImage(hand_up, player_x - 20, hand_sup_y);
 
+    // Desenhar os boletos descendo
     for (let i = 0; i < boletos.length; i++) {
         const t_boleto = boletos[i];
         ctx.drawImage(boleto, t_boleto.x, t_boleto.y);
         t_boleto.y += enemy_speed;
 
+        // Ativar hit() quando um boleto chega ao chão e remover boleto
         if (t_boleto.y > canvas.height) {
             hit();
             boletos.shift();
