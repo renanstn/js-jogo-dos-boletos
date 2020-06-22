@@ -26,10 +26,10 @@ score_snd.src   = "sounds/coin.wav";
 damage_snd.src  = "sounds/hurt.wav";
 
 // Game variables
-const money_speed               = 3;
+const initial_money_speed       = 3;
 const left_limit                = 20;
 const right_limit               = 340;
-const fire_cooldown             = 300;
+const fire_cooldown             = 100;
 const enemy_spawn_x             = [20, 84, 148, 212, 276, 340];
 const enemy_spawn_y             = -64;
 const initial_enemy_cooldown    = 2000;
@@ -47,6 +47,8 @@ let boletos         = [];
 let can_fire        = true;
 let enemy_cooldown  = initial_enemy_cooldown;
 let enemy_speed     = initial_enemy_speed;
+let money_speed     = initial_money_speed;
+let money_spawn;
 
 
 // Detectar inputs
@@ -105,11 +107,12 @@ function game_over() {
     is_game_over = true;
     document.getElementById("pontuacao").innerText = score;
     document.getElementById("game-over").style = "display : inline";
-    clearInterval();
+    clearInterval(money_spawn);
 }
 
 function replay() {
     lives           = 3;
+    money_speed     = initial_money_speed;
     enemy_cooldown  = initial_enemy_cooldown;
     enemy_speed     = initial_enemy_speed;
     score           = 0;
@@ -119,6 +122,8 @@ function replay() {
     is_game_over    = false;
     document.getElementById("game-over").style = "display : none";
     draw();
+    console.log(enemy_cooldown);
+    clearInterval(money_spawn);
     spawn_enemies();
 }
 
@@ -135,17 +140,28 @@ function increase_score() {
     score += 1;
     score_snd.play();
     document.getElementById("score").innerText = score;
+    // A cada 10 pontos, aumentar o level
+    if (score % 10 == 0) {
+        increase_level();
+    }
 }
 
 function increase_level() {
     level += 1;
     document.getElementById("level").innerText = level;
+    // Diminuir o cooldown dos boletos, mas só até o limite de 250ms
+    if (enemy_cooldown > 250) {
+        enemy_cooldown -= 250;
+    }
+    // Aumentar a velodidade dos boletos e do dinheiro
+    enemy_speed += 0.5;
+    money_speed += 0.5;
+    clearInterval(money_spawn);
+    spawn_enemies();
 }
 
 function spawn_enemies() {
-    setInterval(() => {
-        create_enemy();
-    }, enemy_cooldown);
+    money_spawn = setInterval(create_enemy, enemy_cooldown);
 }
 
 function create_enemy() {
